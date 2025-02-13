@@ -1,13 +1,11 @@
 package de.maxhenkel.wiretap.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import de.maxhenkel.wiretap.Wiretap;
 import de.maxhenkel.wiretap.utils.HeadUtils;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AnvilMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.ItemCombinerMenu;
-import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +15,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.UUID;
 
@@ -33,12 +30,12 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu {
     @Unique
     private ItemStack currentInputItem;
 
-    public AnvilMenuMixin(@Nullable MenuType<?> menuType, int i, Inventory inventory, ContainerLevelAccess containerLevelAccess) {
-        super(menuType, i, inventory, containerLevelAccess);
+    public AnvilMenuMixin(@Nullable MenuType<?> menuType, int i, Inventory inventory, ContainerLevelAccess containerLevelAccess, ItemCombinerMenuSlotDefinition itemCombinerMenuSlotDefinition) {
+        super(menuType, i, inventory, containerLevelAccess, itemCombinerMenuSlotDefinition);
     }
 
-    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V", ordinal = 4, shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void createResult(CallbackInfo ci, ItemStack itemStack, int i, int j, int k, ItemStack itemStack2) {
+    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V", ordinal = 4, shift = At.Shift.AFTER))
+    public void createResult(CallbackInfo ci, @Local(ordinal = 0) ItemStack itemStack) {
         if (!Wiretap.SERVER_CONFIG.anvilCrafting.get()) {
             return;
         }

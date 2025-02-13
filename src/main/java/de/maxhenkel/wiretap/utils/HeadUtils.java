@@ -9,14 +9,13 @@ import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.util.UUIDTypeAdapter;
 import de.maxhenkel.wiretap.Wiretap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
@@ -24,8 +23,8 @@ import java.util.*;
 
 public class HeadUtils {
 
-    public static final String MICROPHONE = "microphone-aa41dc91-b8f1-4d4e-8c2d-5d95d541748c";
-    public static final String SPEAKER = "speaker-aa41dc91-b8f1-4d4e-8c2d-5d95d541748c";
+    public static final String MICROPHONE = "mic-chl0xy0g";
+    public static final String SPEAKER = "speaker-chl0xy0g";
 
     public static ItemStack createMicrophone(UUID id) {
         return createHead("Microphone", id, MICROPHONE, Wiretap.SERVER_CONFIG.microphoneSkinUrl.get());
@@ -59,32 +58,25 @@ public class HeadUtils {
 
     public static ItemStack createHead(String itemName, UUID id, String name, String skinUrl) {
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
-        CompoundTag tag = stack.getOrCreateTag();
 
         MutableComponent loreComponent = Component.literal("ID: %s".formatted(id.toString())).withStyle(style -> style.withItalic(false)).withStyle(ChatFormatting.GRAY);
+        ItemLore lore = new ItemLore(List.of(loreComponent));
+        stack.set(DataComponents.LORE, lore);
+
         MutableComponent nameComponent = Component.literal(itemName).withStyle(style -> style.withItalic(false).withColor(ChatFormatting.WHITE));
+        stack.set(DataComponents.CUSTOM_NAME, nameComponent);
 
-        ListTag lore = new ListTag();
-        lore.add(0, StringTag.valueOf(Component.Serializer.toJson(loreComponent)));
-        CompoundTag display = new CompoundTag();
-        display.putString(ItemStack.TAG_DISPLAY_NAME, Component.Serializer.toJson(nameComponent));
-        display.put(ItemStack.TAG_LORE, lore);
-        tag.put(ItemStack.TAG_DISPLAY, display);
-        tag.putInt("HideFlags", ItemStack.TooltipPart.ADDITIONAL.getMask());
+        ResolvableProfile profile = new ResolvableProfile(Optional.of(name), Optional.of(id), getTextures(skinUrl));
+        stack.set(DataComponents.PROFILE, profile);
 
-        GameProfile gameProfile = getGameProfile(id, name, skinUrl);
-        tag.put("SkullOwner", NbtUtils.writeGameProfile(new CompoundTag(), gameProfile));
         return stack;
     }
 
     private static final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
 
-    private static GameProfile getGameProfile(UUID uuid, String name, String skinUrl) {
-        GameProfile gameProfile = new GameProfile(uuid, name);
-        PropertyMap properties = gameProfile.getProperties();
-
+    private static PropertyMap getTextures(String skinUrl) {
+        PropertyMap properties = new PropertyMap();
         List<Property> textures = new ArrayList<>();
-
 
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textureMap = new HashMap<>();
         textureMap.put(MinecraftProfileTexture.Type.SKIN, new MinecraftProfileTexture(skinUrl, null));
@@ -93,24 +85,12 @@ public class HeadUtils {
 
         String base64Payload = Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
 
-        textures.add(new Property("Value", base64Payload));
+        textures.add(new Property("textures", base64Payload));
 
         properties.putAll("textures", textures);
-
-        return gameProfile;
+        return properties;
     }
 
-    private static class MinecraftTexturesPayload {
-
-        private final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures;
-
-        public MinecraftTexturesPayload(Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures) {
-            this.textures = textures;
-        }
-
-        public Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getTextures() {
-            return textures;
-        }
+    private record MinecraftTexturesPayload(Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures) {
     }
-
 }

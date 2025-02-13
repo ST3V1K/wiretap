@@ -10,6 +10,7 @@ import de.maxhenkel.wiretap.utils.HeadUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -39,18 +40,18 @@ public class WiretapManager {
         if (!(skullBlockEntity.getLevel() instanceof ServerLevel serverLevel)) {
             return;
         }
-        GameProfile ownerProfile = skullBlockEntity.getOwnerProfile();
+        ResolvableProfile ownerProfile = skullBlockEntity.getOwnerProfile();
         if (ownerProfile == null) {
             return;
         }
 
-        UUID microphone = HeadUtils.getMicrophone(ownerProfile);
+        UUID microphone = HeadUtils.getMicrophone(ownerProfile.gameProfile());
         if (microphone != null) {
             microphones.put(microphone, new DimensionLocation(serverLevel, skullBlockEntity.getBlockPos()));
             return;
         }
 
-        UUID speaker = HeadUtils.getSpeaker(ownerProfile);
+        UUID speaker = HeadUtils.getSpeaker(ownerProfile.gameProfile());
         if (speaker != null) {
             speakers.put(speaker, new SpeakerChannel(this, speaker, new DimensionLocation(serverLevel, skullBlockEntity.getBlockPos())));
             return;
@@ -139,11 +140,11 @@ public class WiretapManager {
         if (!(blockEntity instanceof SkullBlockEntity skullBlockEntity)) {
             return false;
         }
-        GameProfile ownerProfile = skullBlockEntity.getOwnerProfile();
+        ResolvableProfile ownerProfile = skullBlockEntity.getOwnerProfile();
         if (ownerProfile == null) {
             return false;
         }
-        UUID realMicrophoneId = HeadUtils.getMicrophone(ownerProfile);
+        UUID realMicrophoneId = HeadUtils.getMicrophone(ownerProfile.gameProfile());
         if (realMicrophoneId == null) {
             return false;
         }
@@ -164,11 +165,11 @@ public class WiretapManager {
         if (!(blockEntity instanceof SkullBlockEntity skullBlockEntity)) {
             return false;
         }
-        GameProfile ownerProfile = skullBlockEntity.getOwnerProfile();
+        ResolvableProfile ownerProfile = skullBlockEntity.getOwnerProfile();
         if (ownerProfile == null) {
             return false;
         }
-        UUID realSpeakerId = HeadUtils.getSpeaker(ownerProfile);
+        UUID realSpeakerId = HeadUtils.getSpeaker(ownerProfile.gameProfile());
         if (realSpeakerId == null) {
             return false;
         }
