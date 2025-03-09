@@ -56,7 +56,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu {
         currentInputItem = itemStack.copy();
     }
 
-    @Inject(method = "onTake", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Container;setItem(ILnet/minecraft/world/item/ItemStack;)V", ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "onTake", at = @At("RETURN"))
     public void onTake(Player player, ItemStack result, CallbackInfo ci) {
         if (!Wiretap.SERVER_CONFIG.anvilCrafting.get()) {
             return;
